@@ -193,6 +193,16 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
                             </div>
                         </div>
                     </div>
+                    <!-- Promo Code Section -->
+                    <div class="mt-3 mb-4">
+                        <div class="input-group" style="border: 2px solid #eee; border-radius: 12px; overflow: hidden;">
+                            <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-tag-fill text-secondary"></i></span>
+                            <input type="text" id="promoInput" class="form-control border-0 bg-white" placeholder="Promo code..." style="outline:none; box-shadow:none;">
+                            <button class="btn btn-dark px-3 m-1 rounded-3" type="button" onclick="applyPromo()" style="font-size:0.85rem; font-weight:700;">Apply</button>
+                        </div>
+                        <div id="promoMsg" class="mt-2 small fw-bold"></div>
+                    </div>
+
                     <?php if ($is_logged_in): ?>
                         <a href="checkout.php" class="btn btn-panda w-100 py-3 shadow-sm">Proceed to Checkout <i class="bi bi-arrow-right ms-2"></i></a>
                     <?php else: ?>
@@ -245,6 +255,27 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
             let people = parseInt(friendsInput.value);
             let share = Math.ceil(grandTotal / people); 
             shareText.innerText = "Rs. " + share;
+        }
+
+        // ===== PROMO CODE =====
+        const PROMO_CODES = {
+            'SAVE10': { discount: 10, label: '10% off applied! 🎉' },
+            'FOODIES20': { discount: 20, label: '20% off applied! 🎊' },
+            'HUNGRY50': { discount: 50, label: 'Rs. 50 flat off applied! 🍔' },
+        };
+        function applyPromo() {
+            const input = document.getElementById('promoInput');
+            const msg = document.getElementById('promoMsg');
+            const code = input.value.trim().toUpperCase();
+            if(PROMO_CODES[code]) {
+                msg.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>${PROMO_CODES[code].label}</span>`;
+                input.classList.add('border-success');
+                input.readOnly = true;
+            } else {
+                msg.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Invalid promo code.</span>`;
+                input.classList.add('border-danger');
+                setTimeout(() => { input.classList.remove('border-danger'); msg.innerHTML = ''; }, 2000);
+            }
         }
     </script>
 </body>
