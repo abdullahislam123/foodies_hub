@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Karachi'); // PKT Fix
 session_start();
 include 'db.php';
 
@@ -67,11 +68,12 @@ $cats_result = $conn->query($cats_sql);
 $rests_sql = "SELECT * FROM restaurants";
 $rests_result = $conn->query($rests_sql);
 
-// --- 4. MAIN PRODUCT QUERY ---
+// --- 4. MAIN PRODUCT QUERY (only available items from online restaurants) ---
 $sql_query = "SELECT p.*, r.name as restaurant_name, r.rating 
               FROM products p 
               LEFT JOIN restaurants r ON p.restaurant_id = r.id 
-              WHERE 1=1";
+              WHERE (p.is_available IS NULL OR p.is_available = 1)
+              AND (r.is_online IS NULL OR r.is_online = 1)";
 
 // SEARCH FILTER
 if (isset($_GET['search']) && !empty($_GET['search'])) {
@@ -79,7 +81,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     $sql_query .= " AND p.name LIKE '%$search%'";
 }
 
-// DISCOUNT FILTER (NEW LOGIC)
+// DISCOUNT FILTER
 if (isset($_GET['on_sale'])) {
     $sql_query .= " AND p.discount_percent > 0";
 }

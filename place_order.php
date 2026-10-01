@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Karachi'); // PKT Fix
 session_start();
 include 'db.php';
 
@@ -15,7 +16,8 @@ if (isset($_POST['place_order'])) {
     $r_name = mysqli_real_escape_string($conn, $_POST['receiver_name']);
     $r_phone = mysqli_real_escape_string($conn, $_POST['receiver_phone']);
     $address = mysqli_real_escape_string($conn, $_POST['address']);
-    $instr = isset($_POST['instructions']) ? mysqli_real_escape_string($conn, $_POST['instructions']) : ''; 
+    $instr = isset($_POST['instructions']) ? mysqli_real_escape_string($conn, $_POST['instructions']) : '';
+
     
     // 2. Calculate Subtotal & Get Restaurant ID
     $subtotal = 0;
@@ -39,13 +41,14 @@ if (isset($_POST['place_order'])) {
         $products_data[] = $row; // Save row for Step 5
     }
     
-    // 3. Add Delivery Fee
-    $delivery_fee = 99;
+    // 3. Get Delivery Fee from Settings
+    $fee_res = $conn->query("SELECT setting_value FROM settings WHERE setting_key='delivery_fee' LIMIT 1");
+    $delivery_fee = ($fee_res && $fee_res->num_rows > 0) ? (int)$fee_res->fetch_assoc()['setting_value'] : 99;
     $grand_total = $subtotal + $delivery_fee;
 
-    // 4. Create Order (NOW INCLUDES restaurant_id)
-    $sql = "INSERT INTO orders (customer_id, restaurant_id, receiver_name, receiver_phone, total_amount, status, address, instructions) 
-            VALUES ('$cid', '$restaurant_id', '$r_name', '$r_phone', '$grand_total', 'Pending', '$address', '$instr')";
+    // 4. Create Order (INCLUDES restaurant_id + delivery_fee)
+    $sql = "INSERT INTO orders (customer_id, restaurant_id, receiver_name, receiver_phone, total_amount, delivery_fee, status, address, instructions) 
+            VALUES ('$cid', '$restaurant_id', '$r_name', '$r_phone', '$grand_total', '$delivery_fee', 'Pending', '$address', '$instr')";
     
     if ($conn->query($sql)) {
         $order_id = $conn->insert_id; // Get new Order ID

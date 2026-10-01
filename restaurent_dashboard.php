@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Karachi'); // PKT Fix
 session_start();
 include 'db.php';
 
@@ -11,6 +12,23 @@ if (!isset($_SESSION['rest_id'])) {
 $rest_id = $_SESSION['rest_id'];
 $rest_name = $_SESSION['rest_name']; 
 $msg = "";
+
+// --- TOGGLE AVAILABILITY ---
+if(isset($_GET['toggle_avail']) && isset($_GET['pid'])) {
+    $pid = (int)$_GET['pid'];
+    $new_val = (int)$_GET['toggle_avail'];
+    $conn->query("UPDATE products SET is_available='$new_val' WHERE id='$pid' AND restaurant_id='$rest_id'");
+    header("Location: restaurent_dashboard.php#menu");
+    exit();
+}
+
+// --- TOGGLE ONLINE STATUS ---
+if(isset($_POST['toggle_online'])) {
+    $new_status = (int)$_POST['online_val'];
+    $conn->query("UPDATE restaurants SET is_online='$new_status' WHERE id='$rest_id'");
+    header("Location: restaurent_dashboard.php");
+    exit();
+}
 
 // --- ADD PRODUCT LOGIC ---
 if (isset($_POST['add_product'])) {
@@ -44,6 +62,11 @@ if (isset($_POST['add_product'])) {
 // Get Total Items Count
 $count_sql = "SELECT count(*) as total FROM products WHERE restaurant_id = '$rest_id'";
 $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
+
+// Get online status
+$rest_res = $conn->query("SELECT is_online FROM restaurants WHERE id='$rest_id'");
+$rest_data = $rest_res ? $rest_res->fetch_assoc() : ['is_online'=>1];
+$is_online = $rest_data['is_online'] ?? 1;
 ?>
 
 <!DOCTYPE html>
@@ -78,6 +101,21 @@ $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
         .item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .price-badge { background: #eaffea; color: #00b894; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
         #imgPreview { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; display: none; margin-bottom: 15px; border: 2px dashed #ddd; }
+
+        /* Availability Toggle */
+        .avail-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .avail-switch input { opacity: 0; width: 0; height: 0; }
+        .avail-slider { position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0; background:#ddd; border-radius:24px; transition:.3s; }
+        .avail-slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
+        input:checked + .avail-slider { background: #00b894; }
+        input:checked + .avail-slider:before { transform: translateX(22px); }
+        .unavail-badge { background:#ffeaa7; color:#b7891a; border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700; }
+
+        /* Online toggle in navbar */
+        .online-toggle-wrap { display:flex; align-items:center; gap:8px; background:#f8f9fa; border-radius:50px; padding:5px 14px; }
+        .online-dot { width:9px; height:9px; border-radius:50%; }
+        .online-dot.on { background:#00b894; }
+        .online-dot.off { background:#d63031; }
     </style>
 </head>
 
@@ -90,9 +128,26 @@ $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
                 <?php echo $rest_name; ?>
             </a>
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-light text-dark border d-none d-md-block">
-                    <i class="bi bi-circle-fill text-success me-1" style="font-size: 8px;"></i> Online
-                </span>
+            <div class="d-flex align-items-center gap-3">
+
+                <!-- Online/Offline Toggle -->
+                <form method="POST" class="mb-0">
+                    <div class="online-toggle-wrap">
+                        <div class="online-dot <?= $is_online ? 'on' : 'off' ?>"></div>
+                        <span class="small fw-bold"><?= $is_online ? 'Online' : 'Offline' ?></span>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" style="width:2.3em;height:1.2em;cursor:pointer;"
+                                   name="online_val" value="<?= $is_online ? 0 : 1 ?>"
+                                   <?= $is_online ? 'checked' : '' ?>
+                                   onchange="this.form.submit()" title="Toggle Online/Offline">
+                            <input type="hidden" name="toggle_online" value="1">
+                        </div>
+                    </div>
+                </form>
+
+                <a href="restaurent_order.php" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                    <i class="bi bi-bell-fill me-1"></i> Orders
+                </a>
                 <a href="restaurent_logout.php" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="bi bi-box-arrow-right me-1"></i> Logout
                 </a>
@@ -199,6 +254,7 @@ $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
                                     <tr>
                                         <th class="ps-4">Product Details</th>
                                         <th>Price</th>
+                                        <th>Available</th>
                                         <th class="text-end pe-4">Actions</th>
                                     </tr>
                                 </thead>
@@ -208,21 +264,19 @@ $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
                                     if ($res->num_rows > 0) {
                                         while ($row = $res->fetch_assoc()) {
                                             $disc = isset($row['discount_percent']) ? $row['discount_percent'] : 0;
+                                            $avail = isset($row['is_available']) ? (int)$row['is_available'] : 1;
                                     ?>
-                                            <tr>
+                                            <tr style="<?= !$avail ? 'opacity:0.55;' : '' ?>">
                                                 <td class="ps-4">
                                                     <div class="d-flex align-items-center">
                                                         <img src="assets/uploads/<?php echo $row['image']; ?>" class="item-img me-3" alt="Food">
                                                         <div>
                                                             <div class="fw-bold text-dark mb-1">
                                                                 <?php echo $row['name']; ?>
-                                                                <?php if($disc > 0) { ?>
-                                                                    <span class="badge bg-danger ms-1" style="font-size: 10px;"><?php echo $disc; ?>% OFF</span>
-                                                                <?php } ?>
+                                                                <?php if($disc > 0) { ?><span class="badge bg-danger ms-1" style="font-size:10px;"><?php echo $disc; ?>% OFF</span><?php } ?>
+                                                                <?php if(!$avail): ?><span class="unavail-badge ms-1">OUT OF STOCK</span><?php endif; ?>
                                                             </div>
-                                                            <small class="text-muted d-block text-truncate" style="max-width: 200px;">
-                                                                <?php echo $row['description']; ?>
-                                                            </small>
+                                                            <small class="text-muted d-block text-truncate" style="max-width:200px;"><?php echo $row['description']; ?></small>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -238,11 +292,19 @@ $total_items = $conn->query($count_sql)->fetch_assoc()['total'];
                                                         <span class="price-badge">Rs. <?php echo $row['price']; ?></span>
                                                     <?php } ?>
                                                 </td>
+                                                <td>
+                                                    <!-- Availability Toggle -->
+                                                    <label class="avail-switch" title="<?= $avail ? 'Click to mark Out of Stock' : 'Click to mark Available' ?>">
+                                                        <input type="checkbox" <?= $avail ? 'checked' : '' ?>
+                                                               onchange="window.location='restaurent_dashboard.php?toggle_avail=<?= $avail?0:1 ?>&pid=<?= $row['id'] ?>'">
+                                                        <span class="avail-slider"></span>
+                                                    </label>
+                                                </td>
                                                 <td class="text-end pe-4">
                                                     <a href="restaurant_edit_product.php?id=<?php echo $row['id']; ?>" class="btn btn-light btn-sm text-primary me-1" title="Edit">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
-                                                    <a href="delete_product.php?id=<?php echo $row['id']; ?>" class="btn btn-light btn-sm text-danger" onclick="return confirm('Are you sure you want to remove this item?');" title="Delete">
+                                                    <a href="delete_product.php?id=<?php echo $row['id']; ?>" class="btn btn-light btn-sm text-danger" onclick="return confirm('Are you sure?');" title="Delete">
                                                         <i class="bi bi-trash-fill"></i>
                                                     </a>
                                                 </td>

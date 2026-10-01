@@ -151,6 +151,8 @@ if($q3) $total_customers = $q3->fetch_assoc()['total'];
             <a href="#" class="nav-link active"><i class="bi bi-grid"></i> <span>Dashboard</span></a>
             <a href="admin_add_restaurant.php" class="nav-link"><i class="bi bi-shop"></i> <span>Add Partner</span></a>
             <a href="admin_orders.php" class="nav-link"><i class="bi bi-receipt"></i> <span>Orders</span></a>
+            <a href="admin_revenue.php" class="nav-link"><i class="bi bi-graph-up-arrow"></i> <span>Revenue</span></a>
+            <a href="admin_settings.php" class="nav-link"><i class="bi bi-gear"></i> <span>Settings</span></a>
             <a href="logout.php" class="nav-link mt-auto mb-4 text-danger"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a>
         </nav>
     </div>
