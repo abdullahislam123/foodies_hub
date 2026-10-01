@@ -254,9 +254,9 @@ $product_result = $conn->query($sql_query);
         .btn-fav:hover { transform: scale(1.15); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
         .btn-fav i { font-size: 1.2rem; color: #b2bec3; transition: 0.2s; }
         .btn-fav i.active { color: #D70F64; animation: pop 0.3s ease; }
-        .btn-add-custom { width: 45px; height: 45px; background-color: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(215,15,100,0.4); transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
-        .btn-add-custom:hover { background-color: var(--primary-hover); transform: scale(1.1); box-shadow: 0 8px 20px rgba(215,15,100,0.6); }
-        .btn-add-custom:active { transform: scale(0.95); }
+        .btn-add-custom { width: 46px; height: 46px; min-width: 46px; background-color: var(--primary); color: white !important; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(215,15,100,0.45); transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); cursor: pointer; flex-shrink: 0; }
+        .btn-add-custom:hover { background-color: var(--primary-hover); transform: scale(1.12); box-shadow: 0 8px 22px rgba(215,15,100,0.6); }
+        .btn-add-custom:active { transform: scale(0.93); }
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
         /* ===== SIDEBAR & FILTERS ===== */
@@ -774,8 +774,8 @@ $product_result = $conn->query($sql_query);
                                             <span class="fw-bold text-dark fs-5">Rs. <?php echo $price; ?></span>
                                         <?php } ?>
                                     </div>
-                                    <button type="button" onclick="addToCart(<?php echo $prod['id']; ?>)" class="btn-add-custom">
-                                        <i class="bi bi-plus-lg fs-4 fw-bold"></i>
+                                    <button type="button" onclick="addToCart(<?php echo $prod['id']; ?>)" class="btn-add-custom" title="Add to Cart">
+                                        <span style="font-size:1.6rem; font-weight:800; line-height:1;">+</span>
                                     </button>
                                 </div>
                             </div>

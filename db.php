@@ -2,19 +2,18 @@
 // =======================================
 // LOCAL (XAMPP) - Testing ke liye
 // =======================================
-// $servername = "localhost";
-// $username   = "root";
-// $password   = "";
-// $dbname     = "foodies_hub_db";
+$servername = "localhost";
+$username   = "root";
+$password   = "";
+$dbname     = "foodies_hub_db";
 
 // =======================================
 // LIVE (InfinityFree) - Production
 // =======================================
-$servername = "sql110.infinityfree.com";
-
-$username   = "if0_43049502";
-$password   = "dv4ApDTB4WSy";   
-$dbname     = "if0_43049502_foodies_hub"; 
+// $servername = "sql110.infinityfree.com";
+// $username   = "if0_43049502";
+// $password   = "dv4ApDTB4WSy";   
+// $dbname     = "if0_43049502_foodies_hub"; 
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
